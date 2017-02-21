@@ -13,14 +13,14 @@ function startForwardingEvents({nrf, mqttClient}) {
   nrf.sensorStream.onValue(publishEventToMqtt)
 
   function publishEventToMqtt(event) {
-    mqttClient.publish(`/sensor/${event.instance}/${event.tag}/state`, JSON.stringify(event), { retain: true, qos: 1 })
+    mqttClient.publish(`/sensor/${event.instance}/${event.tag}/state`, JSON.stringify(event), { retain: true })
   }
 }
 
 
 
 function startMqttClient(brokerUrl) {
-  const client = mqtt.connect(brokerUrl)
+  const client = mqtt.connect(brokerUrl, { queueQoSZero : false })
   return Bacon.fromEvent(client, 'connect').first()
     .doAction(() => console.log("Connected to MQTT server"))
     .map(() => client)
