@@ -15,7 +15,11 @@ function startForwardingEvents({nrf, mqttClient}) {
   nrf.sensorStream.onValue(publishEventToMqtt)
 
   function publishEventToMqtt(event) {
-    mqttClient.publish(`/sensor/${event.instance}/${event.tag}/state`, JSON.stringify(event), { retain: true })
+    if(event.type === 'command') {
+      mqttClient.publish(`/command/${event.instance}/${event.tag}/state`, JSON.stringify(event))  // Don't retain, qos 0
+    } else {
+      mqttClient.publish(`/sensor/${event.instance}/${event.tag}/state`, JSON.stringify(event), { retain: true, qos: 1 })
+    }
   }
 }
 
