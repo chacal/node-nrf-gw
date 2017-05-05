@@ -81,7 +81,11 @@ function dataReceived(buffer) {
 
 
 function parseTagAndInstance(buffer) {
-  return { tag: buffer.toString('utf8', 0, 1), instance: buffer.readUInt8(1) }
+  const tag = buffer.toString('utf8', 0, 1)
+  const instance = buffer.readUInt8(1)
+  return { tag, instance, type: isCommandTag(tag) ? 'command' : 'event' }
+
+  function isCommandTag(tag) { return tag === 'a' }  // At the moment only autopilot remote sends commands
 }
 
 function fillTemperatureData(buffer, data) {
