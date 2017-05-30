@@ -67,6 +67,9 @@ function dataReceived(buffer) {
       case 's':
         fillRFMGatewayData(buffer, data)
         break;
+      case 'r':
+        fillLevelReportData(buffer, data)
+        break;
       default:
         console.error("Received unknown data!", buffer)
         return
@@ -130,6 +133,12 @@ function fillTankData(buffer, data) {
 function fillRFMGatewayData(buffer, data) {
   data.rssi = buffer.readInt16LE(2)
   data.ackSent = buffer.readUInt8(4) !== 0
+  data.previousSampleTimeMicros = buffer.readUInt32LE(5)
+}
+
+function fillLevelReportData(buffer, data) {
+  data.level = buffer.readUInt8(2)
+  data.vcc = buffer.readInt16LE(3)
   data.previousSampleTimeMicros = buffer.readUInt32LE(5)
 }
 
