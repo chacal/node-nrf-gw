@@ -8,10 +8,13 @@ const MQTT_PASSWORD = process.env.MQTT_PASSWORD || undefined
 
 
 Bacon.combineTemplate({ nrf: nrf, mqttClient: startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD) })
-  .onValue(startForwardingEvents)
+  .onValue(({nrf, mqttClient}) => {
+    startForwardingEvents(nrf, mqttClient)
+    startSendingCommands(nrf, mqttClient)
+})
 
 
-function startForwardingEvents({nrf, mqttClient}) {
+function startForwardingEvents(nrf, mqttClient) {
   nrf.sensorStream.onValue(publishEventToMqtt)
 
   function publishEventToMqtt(event) {
@@ -20,6 +23,16 @@ function startForwardingEvents({nrf, mqttClient}) {
     } else {
       mqttClient.publish(`/sensor/${event.instance}/${event.tag}/state`, JSON.stringify(event), { retain: true, qos: 1 })
     }
+  }
+}
+
+function startSendingCommands(nrf, mqttClient) {
+  mqttClient.subscribe('/nrf-command')
+  mqttClient.on('message', onNrfCommand)
+
+  function onNrfCommand(topic, message) {
+    console.log(`nRF TX: [${message.toString('hex')}]`)
+    nrf.radioSender.write(message)
   }
 }
 
