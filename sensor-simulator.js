@@ -84,7 +84,13 @@ function randomLevelReport() {
   }
 }
 
+function radioSimulator() {
+  return {
+    write: (buf) => console.log('Simulated TX:', buf.toString('hex'))
+  }
+}
+
 module.exports = Bacon.once({
   sensorStream: simulatorStream,
-  radioSender: undefined
+  radioSender: radioSimulator()
 })
