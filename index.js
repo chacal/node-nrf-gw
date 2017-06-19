@@ -32,7 +32,7 @@ function startSendingCommands(nrf, mqttClient) {
 
   function onNrfCommand(topic, message) {
     console.log(`nRF TX: [${message.toString('hex')}]`)
-    nrf.radioSender.write(message)
+    nrf.radioSender.write(Array.prototype.reverse.call(message))    // RF24 on Arduino doesn't send data in LSB order -> reverse to match
   }
 }
 
