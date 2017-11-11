@@ -13,6 +13,7 @@
     "lodash": "^4.17.4",
     "mqtt": "^2.4.0",
     "nrf": "https://github.com/andrei-tatar/node-nrf",
-    "reverse-string": "0.0.6"
+    "reverse-string": "0.0.6",
+    "serialport": "^6.0.4"
   }
 }

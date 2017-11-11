@@ -1,17 +1,17 @@
 var Bacon = require('baconjs')
 var mqtt = require('mqtt')
-var nrf = process.platform === 'linux' ? require('./nrf-receiver.js') : require('./sensor-simulator.js')
+var UartReceiver = require('./uart-receiver')
 
+const UART_DEVICE = process.env.UART_DEVICE || '/dev/ttyAMA0'
 const MQTT_BROKER = process.env.MQTT_BROKER ? process.env.MQTT_BROKER : 'mqtt://mqtt-home.chacal.fi'
 const MQTT_USERNAME = process.env.MQTT_USERNAME || undefined
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || undefined
 
-
-Bacon.combineTemplate({ nrf: nrf, mqttClient: startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD) })
-  .onValue(({nrf, mqttClient}) => {
-    startForwardingEvents(nrf.sensorStream, mqttClient)
-    startSendingCommands(nrf, mqttClient)
-})
+startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD)
+  .onValue(mqttClient => {
+    const uart = UartReceiver.start(UART_DEVICE)
+    startForwardingEvents(uart.sensorStream, mqttClient)
+  })
 
 
 function startForwardingEvents(sensorStream, mqttClient) {
