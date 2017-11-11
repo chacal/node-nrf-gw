@@ -9,13 +9,13 @@ const MQTT_PASSWORD = process.env.MQTT_PASSWORD || undefined
 
 Bacon.combineTemplate({ nrf: nrf, mqttClient: startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD) })
   .onValue(({nrf, mqttClient}) => {
-    startForwardingEvents(nrf, mqttClient)
+    startForwardingEvents(nrf.sensorStream, mqttClient)
     startSendingCommands(nrf, mqttClient)
 })
 
 
-function startForwardingEvents(nrf, mqttClient) {
-  nrf.sensorStream.onValue(publishEventToMqtt)
+function startForwardingEvents(sensorStream, mqttClient) {
+  sensorStream.onValue(publishEventToMqtt)
 
   function publishEventToMqtt(event) {
     if(event.type === 'command') {
