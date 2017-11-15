@@ -19,7 +19,9 @@ function start(device) {
       .filter(_.identity)
       .map(e => {
         const sensorEvent = sensorDataDecoder(Buffer.from(e.data, 'hex'))
-        sensorEvent.rssi = e.rssi
+        if(!! sensorEvent) {
+          sensorEvent.rssi = e.rssi
+        }
         return sensorEvent
       })
   }
