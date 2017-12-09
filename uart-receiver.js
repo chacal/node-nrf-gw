@@ -24,6 +24,7 @@ function start(device) {
         }
         return sensorEvent
       })
+      .filter(_.identity)
   }
 }
 
