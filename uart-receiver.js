@@ -20,7 +20,7 @@ function start(device) {
       .map(e => {
         const sensorEvent = sensorDataDecoder(Buffer.from(e.data, 'hex'))
         if(!! sensorEvent) {
-          sensorEvent.rssi = e.rssi
+          sensorEvent.rssi = -e.rssi
         }
         return sensorEvent
       })
