@@ -1,9 +1,9 @@
 var _ = require('lodash')
 
 function decodeSensorData(buffer) {
-  var data = _.assign(parseTagAndInstance(buffer), { ts: new Date() })
-
   try {
+    var data = _.assign(parseTagAndInstance(buffer), {ts: new Date()})
+
     switch(data.tag) {
       case 't':
         fillTemperatureData(buffer, data)
@@ -33,12 +33,12 @@ function decodeSensorData(buffer) {
         console.error("Received unknown data!", buffer)
         return
     }
+
+    return data
   } catch(err) {
     console.error("Error while decoding received data! Data: ", buffer, "\nError:", err)
     return
   }
-
-  return data
 }
 
 
