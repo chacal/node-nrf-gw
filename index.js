@@ -1,17 +1,40 @@
-var Bacon = require('baconjs')
-var mqtt = require('mqtt')
-var UartReceiver = require('./uart-receiver')
+const Bacon = require('baconjs')
+const mqtt = require('mqtt')
+const UartReceiver = require('./uart-receiver')
 
 const UART_DEVICE = process.env.UART_DEVICE || '/dev/ttyAMA0'
 const MQTT_BROKER = process.env.MQTT_BROKER ? process.env.MQTT_BROKER : 'mqtt://mqtt-home.chacal.fi'
 const MQTT_USERNAME = process.env.MQTT_USERNAME || undefined
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD || undefined
+const USE_RADIO_HW = process.env.USE_RADIO_HW || false
 
-startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD)
-  .onValue(mqttClient => {
-    const uart = UartReceiver.start(UART_DEVICE)
-    startForwardingEvents(uart.sensorStream, mqttClient)
-  })
+
+if(USE_RADIO_HW) {
+  startWithRadioHw()
+} else {
+  startWithUart()
+}
+
+
+function startWithRadioHw() {
+  console.log(`Receiving nRF24 messages via connected radio.`)
+
+  const nrf = process.platform === 'linux' ? require('./nrf-receiver.js') : require('./sensor-simulator.js')
+  Bacon.combineTemplate({ nrf, mqttClient: startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD) })
+    .onValue(({nrf, mqttClient}) => {
+      startForwardingEvents(nrf.sensorStream, mqttClient)
+      startSendingCommands(nrf.radioSender, mqttClient)
+    })
+}
+
+function startWithUart() {
+  console.log(`Receiving nRF24 messages via UART ${UART_DEVICE}.`)
+  startMqttClient(MQTT_BROKER, MQTT_USERNAME, MQTT_PASSWORD)
+    .onValue(mqttClient => {
+      const uart = UartReceiver.start(UART_DEVICE)
+      startForwardingEvents(uart.sensorStream, mqttClient)
+    })
+}
 
 
 function startForwardingEvents(sensorStream, mqttClient) {
@@ -26,13 +49,13 @@ function startForwardingEvents(sensorStream, mqttClient) {
   }
 }
 
-function startSendingCommands(nrf, mqttClient) {
+function startSendingCommands(radioSender, mqttClient) {
   mqttClient.subscribe('/nrf-command')
   mqttClient.on('message', onNrfCommand)
 
   function onNrfCommand(topic, message) {
     console.log(`nRF TX: [${message.toString('hex')}]`)
-    nrf.radioSender.write(Array.prototype.reverse.call(message))    // RF24 on Arduino doesn't send data in LSB order -> reverse to match
+    radioSender.write(Array.prototype.reverse.call(message))    // RF24 on Arduino doesn't send data in LSB order -> reverse to match
   }
 }
 
